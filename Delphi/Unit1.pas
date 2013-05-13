@@ -1,3 +1,5 @@
+{$define OPERATOR_CONCAT}
+
 unit Unit1;
 
 interface
@@ -83,7 +85,11 @@ end;
 
 function TForm1.Test1(Cycles,Count:Integer;Lengths:TArray<Integer>): Integer;
 var S:String;
+{$ifdef OPERATOR_CONCAT}
+    B:String;
+{$else}
     B:TStringBuilder;
+{$endif}
     i,j:Integer;
     Strings:TArray<String>;
 begin
@@ -92,11 +98,17 @@ SetLength(Strings,Length(Lengths));
 for i:=0 to High(Strings) do Strings[i]:=StringOfChar('a',Lengths[i]);
 for i:=1 to Cycles do
   begin
+{$ifdef OPERATOR_CONCAT}
+  B:='';
+  for j:=1 to Count do
+    for S in Strings do B:=B+S;
+{$else}
   B:=TStringBuilder.Create;
   for j:=1 to Count do
     for S in Strings do B.Append(S);
   B.ToString;
   B.Free;
+{$endif}
   end;
 Result:=GetTickCount-Result;
 end;
