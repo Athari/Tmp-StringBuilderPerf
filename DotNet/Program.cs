@@ -1,10 +1,19 @@
-﻿using System;
+﻿//#define OPERATOR_CONCAT
+
+using System;
 using System.Diagnostics;
 using System.Linq;
+#if !OPERATOR_CONCAT
 using System.Text;
+#endif
 
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
 // ReSharper disable SpecifyACultureInStringConversionExplicitly
+#if OPERATOR_CONCAT
+// ReSharper disable LoopCanBeConvertedToQuery
+#pragma warning disable 219
+#endif
+
 namespace StringBuilderPerf
 {
     internal class Program
@@ -58,12 +67,20 @@ namespace StringBuilderPerf
             using (new Benchmark(string.Format("append strings with lengths [{0}] {1:n0} times\n          total length {2:n0}, repeat {3:n0} times",
                 string.Join(", ", lengths.Select(i => i.ToString()).ToArray()), count, totalChars, repeat))) {
                 while (repeat --> 0) {
+#if OPERATOR_CONCAT
+                    string s = "";
+                    int num = count;
+                    while (num --> 0)
+                        foreach (string str in strs)
+                            s += str;
+#else
                     var sb = new StringBuilder();
                     int num = count;
-                    while (num-- > 0)
+                    while (num --> 0)
                         foreach (string str in strs)
                             sb.Append(str);
                     sb.ToString();
+#endif
                 }
             }
         }
