@@ -1,4 +1,5 @@
 {$define OPERATOR_CONCAT}
+{$define OPTIMIZED_CYCLES}
 
 unit Unit1;
 
@@ -90,27 +91,41 @@ var S:String;
 {$else}
     B:TStringBuilder;
 {$endif}
-    i,j:Integer;
+    i,j,k,len:Integer;
     Strings:TArray<String>;
 begin
-Result:=GetTickCount;
-SetLength(Strings,Length(Lengths));
-for i:=0 to High(Strings) do Strings[i]:=StringOfChar('a',Lengths[i]);
-for i:=1 to Cycles do
+  Result:=GetTickCount;
+  len:=Length(Lengths);
+  SetLength(Strings,len);
+  for i:=0 to len-1 do
+    Strings[i]:=StringOfChar('a',Lengths[i]);
+  for i:=0 to Cycles-1 do
   begin
-{$ifdef OPERATOR_CONCAT}
-  B:='';
-  for j:=1 to Count do
-    for S in Strings do B:=B+S;
-{$else}
-  B:=TStringBuilder.Create;
-  for j:=1 to Count do
-    for S in Strings do B.Append(S);
-  B.ToString;
-  B.Free;
-{$endif}
+    {$ifdef OPERATOR_CONCAT}
+      B:='';
+      for j:=0 to Count-1 do
+        {$ifdef OPTIMIZED_CYCLES}
+          for k:=0 to len-1 do
+            B:=B+Strings[k];
+        {$else}
+          for S in Strings do
+            B:=B+S;
+        {$endif}
+    {$else}
+      B:=TStringBuilder.Create;
+      for j:=0 to Count-1 do
+        {$ifdef OPTIMIZED_CYCLES}
+          for k:=0 to len-1 do
+            B:=B+Strings[k];
+        {$else}
+          for S in Strings do
+            B.Append(S);
+        {$endif}
+      B.ToString;
+      B.Free;
+    {$endif}
   end;
-Result:=GetTickCount-Result;
+  Result:=GetTickCount-Result;
 end;
 
 end.
