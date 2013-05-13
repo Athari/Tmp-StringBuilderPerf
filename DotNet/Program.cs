@@ -1,4 +1,5 @@
 ﻿//#define OPERATOR_CONCAT
+#define REUSE_BUILDER
 
 using System;
 using System.Diagnostics;
@@ -66,22 +67,34 @@ namespace StringBuilderPerf
             _bytes += totalChars * repeat;
             using (new Benchmark(string.Format("append strings with lengths [{0}] {1:n0} times\n          total length {2:n0}, repeat {3:n0} times",
                 string.Join(", ", lengths.Select(i => i.ToString()).ToArray()), count, totalChars, repeat))) {
-                while (repeat --> 0) {
 #if OPERATOR_CONCAT
+                while (repeat --> 0) {
                     string s = "";
                     int num = count;
                     while (num --> 0)
                         foreach (string str in strs)
                             s += str;
+                }
+#elif REUSE_BUILDER
+                var sb = new StringBuilder();
+                while (repeat --> 0) {
+                    sb.Length = 0;
+                    int num = count;
+                    while (num --> 0)
+                        foreach (string str in strs)
+                            sb.Append(str);
+                    sb.ToString();
+                }
 #else
+                while (repeat --> 0) {
                     var sb = new StringBuilder();
                     int num = count;
                     while (num --> 0)
                         foreach (string str in strs)
                             sb.Append(str);
                     sb.ToString();
-#endif
                 }
+#endif
             }
         }
 
